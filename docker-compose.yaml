@@ -1,0 +1,33 @@
+services:
+  php:
+    build: docker/php/Dockerfile
+    image:
+    volumes:
+      - ./backend:/var/www
+    depends_on:
+      - postgres
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./backend:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+
+  postgres:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: symfony_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: hellorootuser
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
