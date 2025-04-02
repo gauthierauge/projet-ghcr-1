@@ -1,9 +1,9 @@
-name: Publish Docker Image
+name: Publish Docker Images on tag
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
 
 jobs:
   build-and-push:
@@ -24,13 +24,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract version from Git tag
+        id: extract
+        run: |
+          RAW_TAG=${GITHUB_REF#refs/tags/}       # v1.0.0
+          VERSION=${RAW_TAG#v}                   # 1.0.0
+          MINOR_VERSION=$(echo $VERSION | cut -d. -f1,2)  # 1.0
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "MINOR=$MINOR_VERSION" >> $GITHUB_ENV
+
       - name: Build & Push PHP image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./docker/php/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/php-symfony:8.3
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/php-symfony:${{ env.VERSION }}
+            ghcr.io/${{ github.repository_owner }}/php-symfony:${{ env.MINOR }}
+            ghcr.io/${{ github.repository_owner }}/php-symfony:latest
 
       - name: Build & Push Nginx image
         uses: docker/build-push-action@v5
@@ -38,4 +50,7 @@ jobs:
           context: .
           file: ./docker/nginx/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/nginx-symfony:latest
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/nginx-symfony:${{ env.VERSION }}
+            ghcr.io/${{ github.repository_owner }}/nginx-symfony:${{ env.MINOR }}
+            ghcr.io/${{ github.repository_owner }}/nginx-symfony:latest
