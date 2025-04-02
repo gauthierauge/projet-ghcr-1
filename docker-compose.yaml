@@ -1,7 +1,7 @@
 services:
   php:
     build: docker/php/Dockerfile
-    image:
+    image: ghcr.io/gauthierauge/php-symfony:8.3
     volumes:
       - ./backend:/var/www
     depends_on:
